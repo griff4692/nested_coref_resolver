@@ -1,0 +1,8 @@
+README.md
+setup.py
+ncr/__init__.py
+ncr/replace_corefs.py
+nested_coref_resolver.egg-info/PKG-INFO
+nested_coref_resolver.egg-info/SOURCES.txt
+nested_coref_resolver.egg-info/dependency_links.txt
+nested_coref_resolver.egg-info/top_level.txt

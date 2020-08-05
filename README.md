@@ -1,0 +1,67 @@
+# nested_coref_resolver
+
+`nested_coref_resolver` is a light-weight python script to transform documents by replacing all mentions of co-referent clusters
+with first non-pronominal mention.  Importantly, it explicitly handles nested coreferent mentions, which is a very common phenonema and for which no open source solutions currently exist. 
+
+## Setup
+
+```pip install nested_coref_resolver```
+
+The only dependency is numpy, for which any recent version should work.  It is used sparingly.
+
+## Example Usage 
+
+The script was built to post-process the outputs of [AllenNLP's coreference resolution system](https://demo.allennlp.org/coreference-resolution).  It is agnostic, however, to the coreference predictor used.
+Example input to the main `replace_corefs.resolve` function is a `document` - a list of tokens, and `clusters` - a list of lists where each outer list represents a cluster of coreferent mentions and each nested list represents a list of the spans of those mentions.
+
+```
+from ncr.replace_corefs import resolve
+example = {
+        'document': [
+            'Paul', 'Allen', 'was', 'born', 'on', 'January', '21', ',', '1953', ',', 'in', 'Seattle', ',', 'Washington',
+            ',', 'to', 'Kenneth', 'Sam', 'Allen', 'and', 'Edna', 'Faye', 'Allen', '.', 'Allen', 'attended', 'Lakeside',
+            'School', ',', 'a', 'private', 'school', 'in', 'Seattle', ',', 'where', 'he', 'befriended', 'Bill',
+            'Gates', ',', 'two', 'years', 'younger', ',', 'with', 'whom', 'he', 'shared', 'an', 'enthusiasm', 'for',
+            'computers', '.', 'Paul', 'and', 'Bill', 'used', 'a', 'teletype', 'terminal', 'at', 'their', 'high',
+            'school', ',', 'Lakeside', ',', 'to', 'develop', 'their', 'programming', 'skills', 'on', 'several',
+            'time', '-', 'sharing', 'computer', 'systems', '.'
+        ],
+        'clusters': [
+            [[0, 1], [24, 24], [36, 36], [47, 47], [54, 54]],
+            [[11, 14], [33, 33]],
+            [[38, 52], [56, 56]],
+            [[54, 56], [62, 62], [70, 70]],
+            [[26, 34], [62, 67]]
+        ]
+}
+
+resolved_toks = resolve(example['document'], example['clusters'])
+print(' '.join(resolved_toks))
+```
+
+This will produce the following output:
+
+```
+Paul Allen was born on January 21 , 1953 , in Seattle , Washington , to Kenneth Sam Allen and Edna Faye Allen .
+Paul Allen attended Lakeside School , a private school in Seattle , Washington , , where Paul Allen befriended
+Bill Gates , two years younger , with whom Paul Allen shared an enthusiasm for computers . Paul Allen and Bill Gates
+, two years younger , with whom Paul Allen shared an enthusiasm for computers used a teletype terminal at 
+Lakeside School , a private school in Seattle , Washington , , to develop Paul Allen and Bill Gates ,
+two years younger , with whom Paul Allen shared an enthusiasm for computers programming skills on several time -
+sharing computer systems .
+```
+
+## Functionality
+
+**Handles**
+
+1. nested coreferent entities - very common and not handled by any
+pre-existing coreferent replacement scripts.
+2. Selects head mention as first non-pronominal reference.  In practice, this is very effective.
+
+**Does NOT Handle**
+
+1. Syntax conflicts when replacing text.  I.e. if a possessive noun
+is the head mention, it will be resolved indiscriminately regardless of contexts in which it is placed.  Please see
+AllenNLP's [function](https://docs.allennlp.org/models/master/models/coref/predictors/coref/#replace_corefs) for guidance.  (This will be incorporated in later releases.)
+2. More sophisticated head reference selection.  Custom logic for head reference selection can be incorporated into the script to replace the naive current approach of first non-pronominal selection.
